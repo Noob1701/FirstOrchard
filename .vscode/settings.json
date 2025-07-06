@@ -1,0 +1,27 @@
+{
+  "mypy.enabled": true,
+  "mypy.dmypyEnabled": false,
+  "mypy.typeCheckingMode": "strict",
+  "mypy.runUsingActiveInterpreter": true,
+
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.rulers": [88]
+  },
+
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "always",
+    "source.fixAll": "always"
+  },
+
+  "python.formatting.provider": "black",
+  "notebook.defaultFormatter": "ms-python.python",
+  "python.analysis.typeCheckingMode": "off",  // disable PyLance's checker to avoid conflicts
+
+  "files.associations": {
+    "*.toml": "toml"
+  },
+  "workbench.colorTheme": "Default Dark+"
+}
