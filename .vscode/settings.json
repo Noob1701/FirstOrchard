@@ -3,6 +3,8 @@
   "mypy.dmypyEnabled": false,
   "mypy.typeCheckingMode": "strict",
   "mypy.runUsingActiveInterpreter": true,
+  "python.linting.mypyEnabled": true,
+  "python.linting.enabled": true,
 
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
 

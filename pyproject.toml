@@ -6,6 +6,7 @@ authors = []
 
 [tool.poetry.dependencies]
 python = "^3.11"
+pytest = "^8.4.1"
 
 [tool.poetry.dev-dependencies]
 
@@ -14,15 +15,21 @@ black = "^25.1.0"
 ruff = "^0.12.2"
 mypy = "^1.16.1"
 pytest = "^8.4.1"
+pre-commit = "^4.2.0"
+pytest-mypy-plugins = "^3.2.0"
 
 [tool.black]
 line-length = 88
 target-version = ["py311"]
 
 [tool.ruff]
-extend-select = ["E", "F", "I"]
+
 line-length = 88
 target-version = "py311"
+
+[tool.ruff.lint]
+extend-select = ["E", "F", "I"]
+ignore = ["I001", "I002"]
 
 [tool.mypy]
 python_version = "3.11"
@@ -31,3 +38,15 @@ disallow_untyped_defs = true
 ignore_missing_imports = false
 warn_return_any = true
 explicit_package_bases = true
+strict = true  # applies to everything unless overridden
+
+[[tool.mypy.overrides]]
+module = "first_orchard_solver.tests.*"
+strict = false
+disallow_untyped_defs = false
+check_untyped_defs = true
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
