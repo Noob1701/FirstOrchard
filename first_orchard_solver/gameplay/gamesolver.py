@@ -82,4 +82,42 @@ def win_perc(
         win += win_instance
         loss += loss_instance
 
-    return round(win / len(moves), 2), round(loss / len(moves), 2)
+    return round(win / len(moves), 3), round(loss / len(moves), 3)
+
+
+def win_perc_comp(
+    full_inv_1: Tuple[int, int, int, int],
+    spaces_1: int,
+    full_inv_2: Tuple[int, int, int, int],
+    spaces_2: int,
+    strat_1: str = "large",
+    strat_2: str = "large",
+) -> None:
+    win_perc_1 = win_perc(full_inv_1, spaces_1, strat_1)
+    win_perc_2 = win_perc(full_inv_2, spaces_2, strat_2)
+    win_perc_1_percent = win_perc_1[0] * 100
+    win_perc_2_percent = win_perc_2[0] * 100
+    if win_perc_1_percent > win_perc_2_percent:
+        print(
+            (
+                (
+                    f"Assuming correct play going forward, "
+                    f"the first scenario is "
+                    f"{win_perc_1_percent - win_perc_2_percent:.2f}% better "
+                    f"than the second scenario. \n "
+                    f"You are expected to win {win_perc_1_percent:.2f}% of the time."
+                )
+            )
+        )
+    elif win_perc_1_percent < win_perc_2_percent:
+        print(
+            f"Assuming correct play going forward, "
+            f"the second scenario is {win_perc_2_percent - win_perc_1_percent:.2f}% "
+            f"better than the first scenario. \n"
+            f"You are expected to win {win_perc_2_percent:.2f}% of the time."
+        )
+    else:
+        print(
+            f"The scenarios are equal with a win percentage \n"
+            f"of {win_perc_1_percent:.2f}%, assuming correct play going forward."
+        )
