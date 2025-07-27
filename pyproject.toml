@@ -52,5 +52,5 @@ profile = "black"
 line_length = 88
 
 [[tool.mypy.overrides]]
-module = "pytest.*"
+module = ["pytest.*","pytest_check.*"]
 ignore_missing_imports = true
