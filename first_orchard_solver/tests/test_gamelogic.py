@@ -1,3 +1,7 @@
+"""Unit tests for the game logic of the Orchard game."""
+
+from typing import Dict
+
 import pytest
 
 from first_orchard_solver.gameplay.gamelogic import (
@@ -19,7 +23,8 @@ from first_orchard_solver.gameplay.gamesims import play_with_strat
         ({3: 2, 4: 4, 5: 2, 6: 0}, {3: 1, 4: 4, 5: 2, 6: 0}),
     ],
 )
-def test_smallest_strat(full_inv: dict[int, int], expected: dict[int, int]) -> None:
+def test_smallest_strat(full_inv: Dict[int, int], expected: Dict[int, int]) -> None:
+    """Test the smallest strategy of FruitInventory."""
     orchard_die = OrchardDie()
     inventory = FruitInventory(orchard_die=orchard_die)
     inventory.full_inv = full_inv
@@ -37,7 +42,8 @@ def test_smallest_strat(full_inv: dict[int, int], expected: dict[int, int]) -> N
         ({3: 1, 4: 0, 5: 1, 6: 0}, {3: 0, 4: 0, 5: 1, 6: 0}),
     ],
 )
-def test_largest_strat(full_inv: dict[int, int], expected: dict[int, int]) -> None:
+def test_largest_strat(full_inv: Dict[int, int], expected: Dict[int, int]) -> None:
+    """Test the largest strategy of FruitInventory."""
     orchard_die = OrchardDie()
     inventory = FruitInventory(orchard_die=orchard_die)
     inventory.full_inv = full_inv
@@ -55,7 +61,8 @@ def test_largest_strat(full_inv: dict[int, int], expected: dict[int, int]) -> No
         ({3: 2, 4: 4, 5: 2, 6: 0}, 7),
     ],
 )
-def test_random_strat(full_inv: dict[int, int], expected: int) -> None:
+def test_random_strat(full_inv: Dict[int, int], expected: int) -> None:
+    """Test the random strategy of FruitInventory."""
     orchard_die = OrchardDie()
     inventory = FruitInventory(orchard_die=orchard_die)
     inventory.full_inv = full_inv
@@ -73,7 +80,8 @@ def test_random_strat(full_inv: dict[int, int], expected: int) -> None:
         ({3: 2, 4: 0, 5: 1, 6: 0}, True),
     ],
 )
-def test_check_not_zero(full_inv: dict[int, int], expected: bool) -> None:
+def test_check_not_zero(full_inv: Dict[int, int], expected: bool) -> None:
+    """Test the check_not_zero method of FruitInventory."""
     orchard_die = OrchardDie()
     inventory = FruitInventory(orchard_die=orchard_die)
     inventory.full_inv = full_inv
@@ -90,7 +98,8 @@ def test_check_not_zero(full_inv: dict[int, int], expected: bool) -> None:
         (5, {3: 2, 4: 0, 5: 1, 6: 0}, False),
     ],
 )
-def test_is_game_over(spaces: int, full_inv: dict[int, int], expected: bool) -> None:
+def test_is_game_over(spaces: int, full_inv: Dict[int, int], expected: bool) -> None:
+    """Test the is_game_over method of GameState."""
     orchard_die = OrchardDie()
     inventory = FruitInventory(orchard_die=orchard_die)
     inventory.full_inv = full_inv
@@ -107,6 +116,12 @@ def test_is_game_over(spaces: int, full_inv: dict[int, int], expected: bool) -> 
 # test_play_with_strat
 @pytest.mark.parametrize("strat", ["smallest", "largest", "random"])
 def test_play_with_strat(strat: str) -> None:
+    """
+    Test the play_with_strat function with different strategies.
+
+    Only checks if the game ends.
+
+    """
     game_state = play_with_strat(strat)
     assert game_state.is_game_over()
     assert (

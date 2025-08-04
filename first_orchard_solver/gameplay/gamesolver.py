@@ -1,3 +1,5 @@
+"""Module to handle game solving for the Orchard game."""
+
 import random
 from functools import lru_cache
 from typing import Tuple
@@ -8,14 +10,20 @@ def win_perc(
     full_inv: Tuple[int, int, int, int], spaces: int, strat: str = "large"
 ) -> Tuple[float, float]:
     """
-    Calculate the win and loss probabilities for the smallest strategy.
+    Calculate the win and loss probabilities for selected strategies.
+
+    Especially choosing the fruit with the most remaining.
 
     Args:
+    ----
         full_inv (tuple[int, int, int, int]): The full inventory of fruits.
         spaces (int): The number of spaces left on the raven track.
+        strat (str): The strategy to use for fruit selection. Defaults to "large".
 
     Returns:
+    -------
         tuple[float, float]: A tuple containing win probability and loss probability.
+
     """
     if spaces == 0:
         return (0, 1)
@@ -92,32 +100,34 @@ def win_perc_comp(
     spaces_2: int,
     strat_1: str = "large",
     strat_2: str = "large",
-) -> None:
+) -> Tuple[float, float]:
+    """
+    Calculate the difference.
+
+    Args:
+    ----
+        full_inv_1 (tuple[int, int, int, int]): Fruit inventory for first game state.
+        spaces_1 (int): The number of spaces left on the raven track.
+        full_inv_2 (tuple[int, int, int, int]): Fruit inventory for second game state.
+        spaces_2 (int): The number of spaces left on the raven track.
+        strat_1 (str): Strategy for the first game state. Defaults to "large".
+        strat_2 (str): Strategy for the second game state. Defaults to "large".
+
+    Returns:
+    -------
+        tuple[float, float]: A tuple containing win probability and loss probability.
+
+    """
     win_perc_1 = win_perc(full_inv_1, spaces_1, strat_1)
     win_perc_2 = win_perc(full_inv_2, spaces_2, strat_2)
     win_perc_1_percent = win_perc_1[0] * 100
     win_perc_2_percent = win_perc_2[0] * 100
+    # Important note: I am intentionally returning the probability
+    # in the least winning scenario. This is to ensure that the user gets
+    # the probability that corresponds to their actual choice.
     if win_perc_1_percent > win_perc_2_percent:
-        print(
-            (
-                (
-                    f"Assuming correct play going forward, "
-                    f"the first scenario is "
-                    f"{win_perc_1_percent - win_perc_2_percent:.2f}% better "
-                    f"than the second scenario. \n "
-                    f"You are expected to win {win_perc_1_percent:.2f}% of the time."
-                )
-            )
-        )
+        return (win_perc_1_percent - win_perc_2_percent, win_perc_2_percent)
     elif win_perc_1_percent < win_perc_2_percent:
-        print(
-            f"Assuming correct play going forward, "
-            f"the second scenario is {win_perc_2_percent - win_perc_1_percent:.2f}% "
-            f"better than the first scenario. \n"
-            f"You are expected to win {win_perc_2_percent:.2f}% of the time."
-        )
+        return (win_perc_2_percent - win_perc_1_percent, win_perc_1_percent)
     else:
-        print(
-            f"The scenarios are equal with a win percentage \n"
-            f"of {win_perc_1_percent:.2f}%, assuming correct play going forward."
-        )
+        return (0, win_perc_1_percent)
