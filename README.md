@@ -79,7 +79,7 @@ Let's say I did want 75% to the the win rate. Then, I could easily tweak the sta
 
 Another application comes from the Monte Carlo simulations. It is not always or even usually feasible to fully mathematically solve a game, especially with multiple players. What you can do quickly is to see how often certain scenarios pop up. 
 
-Let's say a prototyped game has gotten negative feedback about a particular combination of cards, but the individual cards are well liked. One thought might be to tweak each card to hamper this effect. And this migth be the solution. But you also might want to know how often this combination is likely to occur and under what conditions is it more likely to occur. 
+Let's say a prototyped game has gotten negative feedback about a particular combination of cards, but the individual cards are well liked. One thought might be to tweak each card to hamper this effect. And this might be the solution. But you also might want to know how often this combination is likely to occur and under what conditions is it more likely to occur. 
 
 In short another way around such a game decision choice would be to limit the odds of that combination occurring. 
 
