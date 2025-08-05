@@ -33,7 +33,7 @@ There are three separate simulations that are run as a result of the run batches
 An intuitive explanation for this conclusion is that when you pick from fruits with less remaining you increase the odds of one fruit being empty before the othres. When a fruit is empty you are decreasing the number of good sides for you while the number of bad sides remain the same (1).
 
 
-IV. SOlver 
+IV. Solver 
 
 This repo analytically solves the game and confirms via simulation that the probability of winning from the starting state — assuming optimal play — is approximately 63.2%.
 
