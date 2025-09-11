@@ -81,7 +81,7 @@ Another application comes from the Monte Carlo simulations. It is not always or 
 
 Let's say a prototyped game has gotten negative feedback about a particular combination of cards, but the individual cards are well liked. One thought might be to tweak each card to hamper this effect. And this might be the solution. But you also might want to know how often this combination is likely to occur and under what conditions is it more likely to occur. 
 
-In short another way around such a game decision choice would be to limit the odds of that combination occurring. 
+In short, another way around such a game decision choice would be to limit the odds of that combination occurring. 
 
 Also such Monte Carlo simulations and in some cases an analytical solver could check for balance in games that have some sort of asymmetry, such as different factions/characters that someone controls. Does one character or faction have a decided advantage. 
 

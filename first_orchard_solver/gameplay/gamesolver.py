@@ -1,13 +1,87 @@
 """Module to handle game solving for the Orchard game."""
 
-import random
+import copy
 from functools import lru_cache
-from typing import Tuple
+from typing import List, Tuple
+
+from first_orchard_solver.gameplay.gamelogic import GameState
+from first_orchard_solver.gameplay.gamesims import Strategy, _choose_strat
+from first_orchard_solver.tests.test_gamelogic import _set_state
+
+
+def _win_perc_return_logic(game_state: GameState) -> Tuple[int, int] | None:
+    """
+    Return the win or loss from a game for the win_perc function.
+
+    Args:
+    ----
+            game_state (GameState): Holds these relevant attributes in game_state.
+
+            ---fruit_values (tuple[int, int, int , int]): Tuple of fruit types & counts.
+
+            ---raven_track (int): Number of spaces left on the Raven Track
+
+    Returns:
+    -------
+            Either (1) or (2) Seen below.
+            (1) Either a tuple of (0,1) or (1,0). A loss or win instance resectively.
+            (2) None for a non-finshed game, in which solver will continue until 1.
+
+    """
+    if game_state.raven_track.spaces == 0:
+        return (0, 1)
+    if all(fruit == 0 for fruit in game_state.fruit_inventory.fruit_values):
+        return (1, 0)
+    return None
+
+
+def _decrement_logic(game_state: GameState, strat: Strategy) -> List[GameState]:
+    """
+    Generate all single-roll outcomes from this state.
+
+    Args:
+    ----
+            game_state (GameState): Holds the relevant attributes.
+            ---fruit_inventory (dict[int, int]): Dict of fruit types and their counts.
+
+            ---raven_track (int): Number of spaces left on the Raven Track.
+
+            strat (Strategy): String representation of the strategy to be used.
+
+    Returns:
+    -------
+            moves (list): A list of next states as (fruit1, fruit2, fruit3,
+            fruit4, spaces).
+
+    """
+    game_states = []
+
+    # Sides 1–4: fruit colors
+    for i in game_state.fruit_inventory.fruit_inventory.keys():
+        if game_state.fruit_inventory.fruit_inventory[i] > 0:
+            new_state = copy.deepcopy(game_state)
+            new_state.fruit_inventory.decrement_fruit(i)
+            game_states.append(new_state)
+
+    # Side 5: raven
+    if game_state.raven_track.spaces > 0:
+        new_state = copy.deepcopy(game_state)
+        new_state.raven_track.decrement_raven()
+        game_states.append(new_state)
+
+    # Side 6: wild/strategy
+    if any(game_state.fruit_inventory.fruit_values):
+        new_state = copy.deepcopy(game_state)
+        _, strat_func_copy = _choose_strat(new_state, strat)
+        strat_func_copy()
+        game_states.append(new_state)
+
+    return game_states
 
 
 @lru_cache(maxsize=None)
 def win_perc(
-    full_inv: Tuple[int, int, int, int], spaces: int, strat: str = "large"
+    fruit_count: Tuple[int, int, int, int], raven_track: int, strat: Strategy
 ) -> Tuple[float, float]:
     """
     Calculate the win and loss probabilities for selected strategies.
@@ -16,77 +90,29 @@ def win_perc(
 
     Args:
     ----
-        full_inv (tuple[int, int, int, int]): The full inventory of fruits.
-        spaces (int): The number of spaces left on the raven track.
-        strat (str): The strategy to use for fruit selection. Defaults to "large".
+        fruit_count (Tuple[int, int, int, int]): counts of the various fruits
+        raven_track (int): Number of spaces left on the raven track
+        strat (str): The strategy to use for fruit selection. Defaults to "largest".
 
     Returns:
     -------
         tuple[float, float]: A tuple containing win probability and loss probability.
 
     """
-    if spaces == 0:
-        return (0, 1)
-    if all(fruit == 0 for fruit in full_inv):
-        return (1, 0)
+    game_state = GameState()
+    fruit_dict = {i + 3: fruit_count[i] for i in range(len(fruit_count))}
+    _set_state(game_state, fruit_dict, raven_track)
+    end_game_check = _win_perc_return_logic(game_state)
 
+    if end_game_check is not None:  # game is over
+        return end_game_check
+    moves = _decrement_logic(game_state, strat)
     win = 0.0
     loss = 0.0
-    moves = []
-
-    if spaces > 0 or any(full_inv) != 0:
-        if full_inv[0] != 0:
-            new_state = (full_inv[0] - 1, full_inv[1], full_inv[2], full_inv[3], spaces)
-            moves.append(new_state)
-        if full_inv[1] != 0:
-            new_state = (full_inv[0], full_inv[1] - 1, full_inv[2], full_inv[3], spaces)
-            moves.append(new_state)
-        if full_inv[2] != 0:
-            new_state = (full_inv[0], full_inv[1], full_inv[2] - 1, full_inv[3], spaces)
-            moves.append(new_state)
-        if full_inv[3] != 0:
-            new_state = (full_inv[0], full_inv[1], full_inv[2], full_inv[3] - 1, spaces)
-            moves.append(new_state)
-        if spaces > 0:
-            new_state = (full_inv[0], full_inv[1], full_inv[2], full_inv[3], spaces - 1)
-            moves.append(new_state)
-        if any(full_inv) != 0:
-            if strat == "large":
-                max_index = full_inv.index(max(full_inv))
-                new_state = (
-                    full_inv[0] - 1 if max_index == 0 else full_inv[0],
-                    full_inv[1] - 1 if max_index == 1 else full_inv[1],
-                    full_inv[2] - 1 if max_index == 2 else full_inv[2],
-                    full_inv[3] - 1 if max_index == 3 else full_inv[3],
-                    spaces,
-                )
-
-                moves.append(new_state)
-
-            if strat == "small":
-                candidates = [(i, v) for i, v in enumerate(full_inv) if v >= 1]
-                min_index, _ = min(candidates, key=lambda x: x[1])
-                new_state = (
-                    full_inv[0] - 1 if min_index == 0 else full_inv[0],
-                    full_inv[1] - 1 if min_index == 1 else full_inv[1],
-                    full_inv[2] - 1 if min_index == 2 else full_inv[2],
-                    full_inv[3] - 1 if min_index == 3 else full_inv[3],
-                    spaces,
-                )
-
-                moves.append(new_state)
-            if strat == "random":
-                index = random.choice([i for i, v in enumerate(full_inv) if v > 0])
-                new_state = (
-                    full_inv[0] - 1 if index == 0 else full_inv[0],
-                    full_inv[1] - 1 if index == 1 else full_inv[1],
-                    full_inv[2] - 1 if index == 2 else full_inv[2],
-                    full_inv[3] - 1 if index == 3 else full_inv[3],
-                    spaces,
-                )
-                moves.append(new_state)
-    for next_state in moves:
-        win_instance, loss_instance = win_perc(next_state[:4], next_state[4], strat)
+    for move in moves:
+        win_instance, loss_instance = win_perc(
+            move.fruit_inventory.fruit_values, move.raven_track.spaces, strat
+        )
         win += win_instance
         loss += loss_instance
 
@@ -94,40 +120,43 @@ def win_perc(
 
 
 def win_perc_comp(
-    full_inv_1: Tuple[int, int, int, int],
-    spaces_1: int,
-    full_inv_2: Tuple[int, int, int, int],
-    spaces_2: int,
-    strat_1: str = "large",
-    strat_2: str = "large",
-) -> Tuple[float, float]:
+    game_state_1: GameState,
+    game_state_2: GameState,
+    strat_1: Strategy = "most",
+    strat_2: Strategy = "most",
+) -> Tuple[float, float, float]:
     """
     Calculate the difference.
 
     Args:
     ----
-        full_inv_1 (tuple[int, int, int, int]): Fruit inventory for first game state.
-        spaces_1 (int): The number of spaces left on the raven track.
-        full_inv_2 (tuple[int, int, int, int]): Fruit inventory for second game state.
-        spaces_2 (int): The number of spaces left on the raven track.
-        strat_1 (str): Strategy for the first game state. Defaults to "large".
-        strat_2 (str): Strategy for the second game state. Defaults to "large".
+        game_state_1 (GameState): Game status of the chosen scenario
+
+        game_state_2 (GameState): Game status of the chosen comparator scenario
+
+        strat_1 (Strategy): Strategy for the first game state. Defaults to "most".
+
+        strat_2 (Strategy): Strategy for the second game state. Defaults to "most".
 
     Returns:
     -------
-        tuple[float, float]: A tuple containing win probability and loss probability.
+        tuple[float, float, float]: A tuple of the difference in win probabilities,
+        the win probabilities of each choice assuming future perfect play.
 
     """
-    win_perc_1 = win_perc(full_inv_1, spaces_1, strat_1)
-    win_perc_2 = win_perc(full_inv_2, spaces_2, strat_2)
-    win_perc_1_percent = win_perc_1[0] * 100
-    win_perc_2_percent = win_perc_2[0] * 100
-    # Important note: I am intentionally returning the probability
-    # in the least winning scenario. This is to ensure that the user gets
-    # the probability that corresponds to their actual choice.
-    if win_perc_1_percent > win_perc_2_percent:
-        return (win_perc_1_percent - win_perc_2_percent, win_perc_2_percent)
-    elif win_perc_1_percent < win_perc_2_percent:
-        return (win_perc_2_percent - win_perc_1_percent, win_perc_1_percent)
-    else:
-        return (0, win_perc_1_percent)
+    win_perc_1 = win_perc(
+        game_state_1.fruit_inventory.fruit_values,
+        game_state_1.raven_track.spaces,
+        strat_1,
+    )
+    win_perc_2 = win_perc(
+        game_state_2.fruit_inventory.fruit_values,
+        game_state_2.raven_track.spaces,
+        strat_2,
+    )
+    worse_win_perc, best_win_perc = (
+        min(win_perc_1[0], win_perc_2[0]) * 100,
+        max(win_perc_1[0], win_perc_2[0]) * 100,
+    )
+    diff = best_win_perc - worse_win_perc
+    return diff, worse_win_perc, best_win_perc

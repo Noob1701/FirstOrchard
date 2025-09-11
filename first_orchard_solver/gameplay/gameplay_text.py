@@ -1,19 +1,17 @@
 """
-Module to handle gameplay for the Orchard game.
+Module to handle gameplay for the Orchard Text version of the game.
 
 Includes functions to play the game with different strategies and manage game state.
 """
 
 import copy
-from typing import Tuple, cast
 
 from first_orchard_solver.gameplay.gamelogic import GameState
 from first_orchard_solver.gameplay.gamesolver import win_perc_comp
 
 
-def play_orchard() -> None:
+def play_orchard_text(game_state: GameState) -> None:
     """Will allow user to play the Orchard game interactively."""
-    game_state = GameState()
     while not game_state.is_game_over():
         play = input("Roll the die? (y/n): ").strip().lower()
         if play == "y":
@@ -27,29 +25,16 @@ def play_orchard() -> None:
                     fruit_choice = int(
                         input(
                             "Your current fruit inventory is "
-                            f"{game_state.fruit_inventory.full_inv}. "
+                            f"{game_state.fruit_inventory.fruit_inventory}. "
                             "Enter the fruit type (3-6): "
                         )
                     )
-                    if fruit_choice in game_state.fruit_inventory.full_inv:
+                    if fruit_choice in game_state.fruit_inventory.fruit_inventory:
                         game_state_comp = copy.deepcopy(game_state)
-                        game_state_comp.fruit_inventory.largest_strat()
+                        game_state_comp.fruit_inventory.most_strat()
                         user_state = copy.deepcopy(game_state)
                         user_state.fruit_inventory.decrement_fruit(fruit_choice)
-                        full_inv_1 = tuple(user_state.fruit_inventory.full_inv.values())
-                        full_inv_2 = tuple(
-                            game_state_comp.fruit_inventory.full_inv.values()
-                        )
-                        full_inv_1 = cast(Tuple[int, int, int, int], full_inv_1)
-                        full_inv_2 = cast(Tuple[int, int, int, int], full_inv_2)
-                        perc_comp = win_perc_comp(
-                            full_inv_1,
-                            game_state.raven_track.spaces,
-                            full_inv_2,
-                            game_state_comp.raven_track.spaces,
-                            "large",
-                            "large",
-                        )
+                        perc_comp = win_perc_comp(game_state_comp, user_state)
                         game_state.fruit_inventory.decrement_fruit(fruit_choice)
                         print(
                             f"You collected fruit type {fruit_choice}. This was "
@@ -68,4 +53,5 @@ def play_orchard() -> None:
             break
 
 
-play_orchard()
+game_state = GameState()
+play_orchard_text(game_state)

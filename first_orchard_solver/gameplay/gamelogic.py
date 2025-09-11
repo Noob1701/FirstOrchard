@@ -1,26 +1,28 @@
 """
-Module contains the core game logic for the Orchard game.
+Module contains the core game logic for the Orchard game and strategies for bot play.
 
 It includes classes for managing game state, the raven track, the fruit inventory.
 
 """
 
 import random
+from typing import Tuple
 
 
 # In the Orchard game, the player loses when the raven reaches the end of the track
 class RavenTrack:
-    """A class to track the number of spaces left for the raven to move."""
+    """
+    A class to track the number of spaces left for the raven to move.
+
+    Args:
+    ----
+            spaces (int): The number of spaces the raven can move. Defaults to 5. When
+            this is 0, the game is over and player loses.
+
+    """
 
     def __init__(self, spaces: int = 5) -> None:
-        """
-        Initialize the RavenTrack with a given number of spaces.
-
-        Args:
-        ----
-            spaces (int): The number of spaces the raven can move. Defaults to 5.
-
-        """
+        """Initialize the RavenTrack with a given number of spaces."""
         self.spaces = spaces
         return None
 
@@ -30,25 +32,30 @@ class RavenTrack:
         return None
 
 
-# In the base game a die is rolled to determine the action to take.
-# The die has 6 sides, with 2 sides being speicial; for this code those sides are 1 & 2
-# #1 is the raven, which decrements the raven track
-# #2 allows the player to select a fruit of their choice from the inventory
-# #3, #4, #5, #6 are fruit types, which decrement 1 from that fruit's inventory
-# The player(s) win if all the fruits are collected (i.e. the inventory is empty)
 class OrchardDie:
     """A class to represent a die used in the Orchard game."""
 
-    def __init__(self, sides: int = 6, result: int = 0) -> None:
-        """Initialize tOrchardDie with a given number of sides & placeholder result."""
+    def __init__(self, sides: int = 6, die_result: int = 0) -> None:
+        """
+        Initialize OrchardDie with a given number of sides & placeholder result.
+
+        Args:
+        ----
+                sides (int): represents the number of sides on the die can be altered
+                for mathematical purposes. However, currently most functions require
+                the default of 6.
+
+                die_result (int): represents the result of the rolled die
+
+        """
         self.sides = sides
-        self.result = result
+        self.die_result = die_result
         return None
 
     def roll(self) -> int:
         """Roll the die and return the result."""
-        self.result = random.randint(1, self.sides)
-        return self.result
+        self.die_result = random.randint(1, self.sides)
+        return self.die_result
 
 
 class FruitInventory:
@@ -63,45 +70,73 @@ class FruitInventory:
         Args:
         ----
             orchard_die (OrchardDie): An instance of OrchardDie to use for rolling.
+            Minor customization allowed, however, most functions do not support that.
+            Considering removing customizability to stick solely to the base game.
 
         """
-        self.fruit_types = orchard_die.sides - 2
-        self.fruit_amt = 4
-        self.full_inv: dict[int, int] = {}
-        self.fruit_count = tuple(self.full_inv.values())
+        self.fruit_types: int = orchard_die.sides - 2
+        self.fruit_amt: int = 4
+        self.fruit_inventory: dict[int, int] = {}
         for fruit in range(self.fruit_types):
-            self.full_inv[fruit + 3] = 4
+            self.fruit_inventory[fruit + 3] = 4
         return None
 
-    def decrement_fruit(self, result: int) -> None:
-        """Decrement a specific fruit by one in the inventory based die roll result."""
-        if result in self.full_inv.keys() and self.full_inv[result] > 0:
-            self.full_inv[result] -= 1
+    @property
+    def fruit_values(self) -> tuple[int, ...]:
+        """Converts the fruit_inventory dictionary values into a tuple."""
+        return tuple(self.fruit_inventory.values())
 
-    def smallest_strat(self) -> None:
+    def decrement_fruit(self, die_result: int) -> None:
+        """
+        Decrement a specific fruit by one in the inventory based die roll result.
+
+        Args:
+        ----
+                die_result (int): result of OrchardDie roll
+
+        """
+        if (
+            die_result in self.fruit_inventory.keys()
+            and self.fruit_inventory[die_result] > 0
+        ):
+            self.fruit_inventory[die_result] -= 1
+
+    def increment_fruit(self, die_result: int) -> None:
+        """Increment specific fruit by one to restore previous game state in drawing."""
+        if die_result in self.fruit_inventory.keys():
+            self.fruit_inventory[die_result] += 1
+
+    def fewest_strat(self) -> None:
         """Implement a strategy of decrementing the fruit with the least amount."""
         non_zero_fruits: dict[int, int] = {
-            k: v for k, v in self.full_inv.items() if v > 0
+            k: v for k, v in self.fruit_inventory.items() if v > 0
         }
-        smallest_fruit = min(non_zero_fruits, key=lambda k: non_zero_fruits[k])
-        self.full_inv[smallest_fruit] -= 1
+        fewest_fruit = min(non_zero_fruits, key=lambda k: non_zero_fruits[k])
+        self.fruit_inventory[fewest_fruit] -= 1
 
-    def largest_strat(self) -> None:
+    def most_strat(self) -> None:
         """Implement a strategy of decrementing the fruit with the most amount."""
-        largest_fruit = max(self.full_inv, key=lambda k: self.full_inv[k])
-        self.full_inv[largest_fruit] -= 1
+        largest_fruit = max(self.fruit_inventory, key=lambda k: self.fruit_inventory[k])
+        self.fruit_inventory[largest_fruit] -= 1
 
     def random_strat(self) -> None:
-        """Implement a strategy of decrementing a random fruit from the inventory."""
+        """
+        Implement a strategy of decrementing a random fruit from the inventory.
+
+        Note: This logic is used in win_perc that is otherwise deterministic. This is a
+        known limitation of the current code and should be kept in mind. A future
+        refactor might make this deterministic as well. But this is honestly probably
+        not something that is strictly necessary.
+        """
         non_zero_fruits: dict[int, int] = {
-            k: v for k, v in self.full_inv.items() if v > 0
+            k: v for k, v in self.fruit_inventory.items() if v > 0
         }
         random_fruit: int = random.choice(list(non_zero_fruits.keys()))
-        self.full_inv[random_fruit] -= 1
+        self.fruit_inventory[random_fruit] -= 1
 
     def check_not_zero(self) -> bool:
-        """Check if there are any fruits left in the inventory."""
-        return any(value != 0 for value in self.full_inv.values())
+        """Return True if there are any fruits remaining."""
+        return any(value != 0 for value in self.fruit_inventory.values())
 
 
 class GameState:
@@ -109,9 +144,25 @@ class GameState:
 
     def __init__(self) -> None:
         """Initialize game state with an OrchardDie, RavenTrack, and FruitInventory."""
-        self.orchard_die = OrchardDie()
-        self.raven_track = RavenTrack()
-        self.fruit_inventory = FruitInventory(self.orchard_die)
+        self.reset()
+
+    def reset(self) -> None:
+        """Reset the game state to initial conditions."""
+        self.orchard_die: OrchardDie = OrchardDie()
+        self.raven_track: RavenTrack = RavenTrack()
+        self.fruit_inventory: FruitInventory = FruitInventory(self.orchard_die)
+        self.die_click_enabled: bool = True
+        self.fruit_click_enabled: bool = False
+        self.replace_text: str | None = None
+        self.pending_fruit_click: bool = False
+        self.stats_flag: bool = False
+
+    @property
+    def game_status(self) -> Tuple[int, ...]:
+        """Returns full passable tuple of fruit_inventory and raven_track."""
+        status_list = list(self.fruit_inventory.fruit_inventory.values())
+        status_list.append(self.raven_track.spaces)
+        return tuple(status_list)
 
     def is_game_over(self) -> bool:
         """Check if the game is over."""
